@@ -11,7 +11,7 @@ function run(){
         scale: {
             width: SCREEN_DIM.x,
             height: SCREEN_DIM.y,
-            mode: Phaser.Scale.FIT,
+            mode: Phaser.Scale.NONE,
             autoCenter: Phaser.Scale.CENTER_BOTH,
         },
         scene: [MapScene],
