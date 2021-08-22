@@ -10,11 +10,13 @@ export class MapScene extends Phaser.Scene {
     private players: {name: string, controller: string, sprite: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody }[] = [
         {name: "p1", controller: "keyboard", sprite: null as any}
     ];
+    private me: number;
 
     constructor() {
         super("GameScene");
         this.offset = new Phaser.Geom.Point(0, 0);
         this.cursors = null as any;
+        this.me = 0
     }
 
     preload() {
@@ -69,12 +71,12 @@ export class MapScene extends Phaser.Scene {
         });
 
         this.cameras.main.setBounds(0,0, 64 * 32, 64 * 32);
-        this.cameras.main.startFollow(this.players[0].sprite).setZoom(1.5);
+        this.cameras.main.startFollow(this.players[this.me].sprite).setZoom(1.5);
         this.cursors = this.input.keyboard.createCursorKeys();
     }
 
     update() {
-        if (this.players[0].sprite !== null) {
+        if (this.players[this.me].sprite !== null) {
             let vel = new Phaser.Geom.Point(0,0);
             
             // Horizontal movement
@@ -91,26 +93,26 @@ export class MapScene extends Phaser.Scene {
                 vel.setTo(vel.x, 100);
             }
             
-            this.players[0].sprite.body.setVelocity(vel.x, vel.y);
+            this.players[this.me].sprite.body.setVelocity(vel.x, vel.y);
 
             if (vel.x > 0){
-                this.players[0].sprite.play("walk-right", true);
+                this.players[this.me].sprite.play("walk-right", true);
             }
             else if(vel.x < 0){
-                this.players[0].sprite.play("walk-left", true);
+                this.players[this.me].sprite.play("walk-left", true);
             }
             else if(vel.y > 0){
-                this.players[0].sprite.play("walk-down", true);
+                this.players[this.me].sprite.play("walk-down", true);
             }
             else if(vel.y < 0){
-                this.players[0].sprite.play("walk-up", true);
+                this.players[this.me].sprite.play("walk-up", true);
             }
             else{
-                this.players[0].sprite.stop()
+                this.players[this.me].sprite.stop()
             }
 
             // Normalize and scale the velocity so that this.players[0].sprite can't move faster along a diagonal
-            this.players[0].sprite.body.velocity.normalize().scale(100);
+            this.players[this.me].sprite.body.velocity.normalize().scale(100);
             // if(Phaser.Geom.Point.GetMagnitude(vel) == 0){
             //     this.players[0].sprite.stop();
             // }
