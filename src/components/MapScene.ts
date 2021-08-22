@@ -3,22 +3,28 @@ import { Unsubscribe } from "redux";
 
 export const SCREEN_DIM: Phaser.Geom.Point = new Phaser.Geom.Point(window.innerWidth, window.innerHeight);
 
+export class Player{
+    constructor(
+        public name: string,
+        public controller: string,
+        public sprite: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody,
+        public sheet: string,
+        public role: "cit" | "sol",
+        public apples: number = 0,
+    ){}
+}
+
 export class MapScene extends Phaser.Scene {
     private offset: Phaser.Geom.Point;
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     private wasd: any;
     private ijkl: any;
     private storeUnsubscribe: Unsubscribe | null = null;
-    private players: {
-        name: string;
-        controller: string;
-        sprite: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
-        sheet: string;
-    }[] = [
-        { name: "p1", controller: "cursors", sprite: null as any, sheet: "fem" },
-        { name: "p2", controller: "wasd", sprite: null as any, sheet: "mal" },
-        { name: "p3", controller: "ijkl", sprite: null as any, sheet: "sol" },
-        { name: "p4", controller: "ijkl", sprite: null as any, sheet: "sol" },
+    private players: Player[] = [
+        new Player("p1", "cursors", null as any, "fem", "cit"),
+        new Player("p2", "wasd", null as any, "mal", "cit"),
+        new Player("p3", "ijkl", null as any, "sol", "sol"),
+        new Player("p4", "ijkl", null as any, "sol", "sol"),
     ];
     private me: number;
 
@@ -35,6 +41,7 @@ export class MapScene extends Phaser.Scene {
         this.load.spritesheet("fem", "/public/f0202.png", { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet("mal", "/public/m0501.png", { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet("sol", "/public/s0402.png", { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet("apple", "/public/apples.png", { frameWidth: 16, frameHeight: 16 });
         this.load.image("LPC_Remodeled", "/public/LPC_Remodeled.png");
         this.load.image("bridge", "/public/bridge.png");
         this.load.image("Collisions", "/public/Collisions.png");
@@ -72,6 +79,28 @@ export class MapScene extends Phaser.Scene {
         });
     }
 
+    createApple(x: number, y: number){
+        const apple = this.physics.add.image(x, y, "apple", Math.floor(Math.random() * 4));
+        this.players.forEach(player => {
+            this.physics.add.collider(apple, player.sprite, (a, b) => {
+                player.apples++;
+                apple.destroy();
+            })
+        })
+    }
+
+    public playerCollision: ArcadePhysicsCallback = (a:Phaser.Types.Physics.Arcade.GameObjectWithBody, b:Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
+        const playerA = this.players[a.getData("index")];
+        const playerB = this.players[a.getData("index")];
+
+        if(playerA.role == "cit" && playerB.role == "sol"){
+            //make playerA drop all apples
+        }
+        else if(playerB.role == "cit" && playerA.role == "sol"){
+            //make playerB drop all apples
+        }
+    }
+
     create() {
         this.offset = new Phaser.Geom.Point(0, 0);
         const map = this.add.tilemap("map", 32, 32, 32, 32);
@@ -88,6 +117,7 @@ export class MapScene extends Phaser.Scene {
 
         this.players.forEach((player, i) => {
             player.sprite = this.physics.add.sprite(160 + i * 32, 160, player.sheet, 1);
+            player.sprite.setData("index", i);
             this.createAnims(player.sheet);
             // switch (i) {
             //     case 0:
@@ -106,6 +136,7 @@ export class MapScene extends Phaser.Scene {
             player.sprite.body.setSize(24, 20);
             player.sprite.body.offset.x = 4;
             player.sprite.body.offset.y = 12;
+            const t = this.add.text(10,10, player.apples.toString());
         });
 
         const debugGraphics = this.add.graphics().setAlpha(0.75);
@@ -121,7 +152,7 @@ export class MapScene extends Phaser.Scene {
                     this.physics.add.collider(player.sprite, l);
                     this.players.filter((v,j) => j > i).forEach(v => {
                         if(v.sprite){
-                            this.physics.add.collider(player.sprite, v.sprite)
+                            this.physics.add.collider(player.sprite, v.sprite, this.playerCollision)
                         }
                     })
                 }
@@ -157,6 +188,8 @@ export class MapScene extends Phaser.Scene {
             right: Phaser.Input.Keyboard.KeyCodes.L,
             space: Phaser.Input.Keyboard.KeyCodes.M,
         });
+
+        this.createApple(200, 200);
     }
 
     useCursors(i: number) {
@@ -198,7 +231,6 @@ export class MapScene extends Phaser.Scene {
     useKeys(i: number, keys: Phaser.Types.Input.Keyboard.CursorKeys) {
         const player = this.players[i];
         let vel = new Phaser.Geom.Point(0, 0);
-        console.log(this.wasd);
         // Horizontal movement
         if (keys["left"].isDown) {
             vel.setTo(-100, vel.y);
