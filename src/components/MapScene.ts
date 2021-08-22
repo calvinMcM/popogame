@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { Unsubscribe } from "redux";
 
-export const SCREEN_DIM: Phaser.Geom.Point = new Phaser.Geom.Point(800, 600);
+export const SCREEN_DIM: Phaser.Geom.Point = new Phaser.Geom.Point(window.innerWidth, window.innerHeight);
 
 export class MapScene extends Phaser.Scene {
     private offset: Phaser.Geom.Point;
@@ -128,7 +128,7 @@ export class MapScene extends Phaser.Scene {
             });
         });
 
-        this.cameras.main.startFollow(this.players[this.me].sprite).setZoom(1.5);
+        this.cameras.main.startFollow(this.players[this.me].sprite);
         this.cameras.main.setName("0");
         this.cameras.main.setViewport(0, 0, SCREEN_DIM.x / 2, SCREEN_DIM.y / 2);
         this.cameras.add(SCREEN_DIM.x / 2, 0, SCREEN_DIM.x / 2, SCREEN_DIM.y / 2, false, "1");
@@ -137,6 +137,7 @@ export class MapScene extends Phaser.Scene {
 
         this.players.forEach((player, i) => {
             const cam = this.cameras.getCamera(i.toString());
+            cam.setZoom(1.5);
             cam.startFollow(player.sprite);
             cam.setBounds(0, 0, 64 * 32, 64 * 32);
             cam.setSize(SCREEN_DIM.x / 2, SCREEN_DIM.y / 2);
